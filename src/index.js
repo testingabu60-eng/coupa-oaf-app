@@ -2,10 +2,10 @@
 import { createRoot } from 'react-dom/client';
 import React from 'react';
 
-// The styles folder is a sibling of `src`, so this relative path is correct:
+// styles folder is a sibling of src
 import '../styles/index.css';
 
-// IMPORTANT: Capital M — must match the actual filename `src/app/Main.jsx`
+// IMPORTANT: Capital M to match file name on Linux/Vercel
 import Main from './app/Main.jsx';
 
 createRoot(document.getElementById('root')).render(
