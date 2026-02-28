@@ -1,14 +1,14 @@
-/* === BYOA Resizable Shell === */
+/* BYOA floating shell */
 .byoa-shell {
-  width: 420px;     /* Default size */
+  width: 420px;
   height: 560px;
-  resize: both;     /* Allows dragging bottom-right to resize */
+  resize: both;
   overflow: auto;
 
-  background: #ffffff;
-  border: 1px solid rgba(15, 76, 129, 0.25);
+  background: #f7fafc;
+  border: 2px solid #0F4C81;
   border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
   padding: 12px;
 
   min-width: 320px;
@@ -19,7 +19,6 @@
   transition: width 120ms ease, height 120ms ease;
 }
 
-/* Control button row */
 .byoa-controls {
   display: flex;
   justify-content: flex-end;
@@ -27,15 +26,15 @@
   margin-bottom: 10px;
 }
 
-/* Buttons */
 .byoa-btn {
   padding: 4px 10px;
   border-radius: 6px;
   border: 1px solid #d1d5db;
   background: #f9fafb;
+  color: #111827;
   cursor: pointer;
 }
 
 .byoa-btn:hover {
-  background: #f3f4f6;
+  background: #e5e7eb;
 }

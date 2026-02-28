@@ -1,13 +1,10 @@
-// src/stubs/coupa-oaf/index.js
-// Minimal no-op stub so the app can build & run without the real OAF client.
-
 export const initOAFInstance = (config = {}) => {
   return {
     config,
-    sendEvent: async () => {}, // no-op
-    on: () => {},              // no-op
-    off: () => {},             // no-op
-    destroy: () => {},         // no-op
+    sendEvent: async () => {},
+    on: () => {},
+    off: () => {},
+    destroy: () => {},
   };
 };
 
@@ -21,6 +18,4 @@ export class OAFClient {
   destroy() {}
 }
 
-// Provide default export as well for compatibility
-const defaultExport = { initOAFInstance, OAFClient };
-export default defaultExport;
+export default { initOAFInstance, OAFClient };
