@@ -1,15 +1,19 @@
-import { StrictMode } from 'react';
+// src/app/Main.jsx
+import React, { StrictMode, useEffect } from 'react';
 import { OafProvider } from '../features/oaf/OafContext';
 import App from './App';
 
-// Main component definition
-const Main = () => {
+const Main = ({ host, iframeId }) => {
+  // Optional: log once to verify values reached the tree
+  useEffect(() => {
+    console.log('Main mounted with:', { host, iframeId });
+  }, [host, iframeId]);
+
   return (
-    /* StrictMode helps with identifying potential issues in development */
     <StrictMode>
-      {/* OafProvider supplies context to the App */}
-      <OafProvider>
-        <App />
+      {/* Provide host & iframeId to context if your OafProvider expects them */}
+      <OafProvider host={host} iframeId={iframeId}>
+        <App host={host} iframeId={iframeId} />
       </OafProvider>
     </StrictMode>
   );
