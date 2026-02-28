@@ -1,67 +1,25 @@
-import { createContext, useReducer, useMemo } from "react";
-import {
-  DISPATCH_ACTIONS,
-  LAYOUT_POSITIONS,
-  LAYOUT_STATES,
-} from "./oafConstants";
+import React, { createContext, useReducer, useMemo } from "react";
+import { createNoopClient } from "./noopClient";
+// import { initOAFInstance } from "@coupa/open-assistant-framework-client"; // when you’re ready
 
-// Create the context
-export const OafContext = createContext();
+export const OafContext = createContext(null);
 
-// Initial state for OAF context
-const oafState = {
-  currLayoutPosition: LAYOUT_POSITIONS.DOCKED_RIGHT,
-  currLayoutState: LAYOUT_STATES.DEFAULT,
-  prevLayoutState: null,
-  response: null,
-  error: null,
-};
+export const OafProvider = ({ children, host, iframeId, clientId, config }) => {
+  // ...your reducer & state (unchanged)
 
-// OAF reducer for state management
-// Handles actions to update OAF context state
-const oafReducer = (state, action) => {
-  switch (action.type) {
-    case DISPATCH_ACTIONS.SET_RESPONSE:
-      return {
-        ...state,
-        response: action.payload,
-        error: null,
-      };
-    case DISPATCH_ACTIONS.SET_LAYOUT_POSITION:
-      return {
-        ...state,
-        currLayoutPosition: action.payload,
-      };
-    case DISPATCH_ACTIONS.SET_ERROR:
-      return {
-        ...state,
-        error: action.payload,
-        response: null,
-      };
-    case DISPATCH_ACTIONS.SET_LAYOUT_STATE:
-      return {
-        ...state,
-        prevLayoutState: state.currLayoutState,
-        currLayoutState: action.payload,
-      };
-    default:
-      // Returns current state for unknown actions
-      return state;
-  }
-};
+  const mergedConfig = useMemo(() => {
+    const q = new URLSearchParams(location.search);
+    return {
+      host: host || (config && config.host) || q.get("host") || q.get("coupaHost") || q.get("tenant") || "https://ey-in-demo.coupacloud.com",
+      iframeId: iframeId || (config && config.iframeId) || q.get("iframeId") || q.get("clientId") || q.get("iframe_id") || q.get("id") || "69",
+      clientId: clientId || (config && config.clientId) || q.get("clientId") || "69",
+    };
+  }, [host, iframeId, clientId, config]);
 
-/**
- * OAF Context Provider
- * Provides OAF state and dispatch function to the entire app
- * Wrap your app with this provider to access OAF context
- */
-export const OafProvider = ({ children }) => {
-  // useReducer for OAF state management
-  const [state, dispatch] = useReducer(oafReducer, oafState);
+  // If you enable the real initializer later, keep the fallback
+  // const client = useMemo(() => initOAFInstance(mergedConfig) ?? createNoopClient(mergedConfig), [mergedConfig]);
+  const client = useMemo(() => createNoopClient(mergedConfig), [mergedConfig]);
 
-  // Memoized context value to prevent unnecessary re-renders
-  const value = useMemo(() => ({ state, dispatch }), [state]);
-
-  // Provide context to children components
+  const value = useMemo(() => ({ state, dispatch, client, config: mergedConfig }), [state, client, mergedConfig]);
   return <OafContext.Provider value={value}>{children}</OafContext.Provider>;
 };
