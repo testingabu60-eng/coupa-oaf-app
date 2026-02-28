@@ -1,25 +1,26 @@
-# Create/overwrite the stub file
-Set-Content -Path src/stubs/coupa-oaf/index.js -Value @"
 // src/stubs/coupa-oaf/index.js
-export function initOAFInstance(config = {}) {
-  const events = { on: () => {}, off: () => {}, emit: () => {} };
+// Minimal no-op stub so the app can build & run without the real OAF client.
 
+export const initOAFInstance = (config = {}) => {
   return {
-    setSize: async (_size) => {},
-    moveToLocation: async (_pos) => {},
-    moveAndResize: async (_t, _l, _h, _w, _r) => {},
-    navigateToPath: async (_path) => {},
-    getPageContext: async () => ({}),
-    readForm: async (_read) => ({}),
-    writeForm: async (_write) => ({}),
-    listenToDataLocation: async (_sub) => {},
-    listenToOafEvents: async (_sub) => {},
-    enterprise: {
-      openEasyForm: async (_formId) => {},
-      launchUiButtonClickProcess: async (_processId) => {},
-    },
-    events,
-    getElementMeta: async (_formStructure) => ({}),
+    config,
+    sendEvent: async () => {}, // no-op
+    on: () => {},              // no-op
+    off: () => {},             // no-op
+    destroy: () => {},         // no-op
   };
+};
+
+export class OAFClient {
+  constructor(config = {}) {
+    this.config = config;
+  }
+  async sendEvent() {}
+  on() {}
+  off() {}
+  destroy() {}
 }
-"@
+
+// Provide default export as well for compatibility
+const defaultExport = { initOAFInstance, OAFClient };
+export default defaultExport;
