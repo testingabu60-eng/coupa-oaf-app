@@ -1,3 +1,5 @@
+# Create/overwrite the stub file
+Set-Content -Path src/stubs/coupa-oaf/index.js -Value @"
 // src/stubs/coupa-oaf/index.js
 export function initOAFInstance(config = {}) {
   const events = { on: () => {}, off: () => {}, emit: () => {} };
@@ -20,3 +22,4 @@ export function initOAFInstance(config = {}) {
     getElementMeta: async (_formStructure) => ({}),
   };
 }
+"@
