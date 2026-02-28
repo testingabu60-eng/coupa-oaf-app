@@ -1,17 +1,54 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BYOA</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BYOA</title>
-</head>
+    <!-- EARLY inline bootstrap: ensure URL params BEFORE any module loads -->
+    <script>
+      (function () {
+        try {
+          var DEFAULT_HOST = 'https://ey-in-demo.coupacloud.com';
+          var DEFAULT_ID = '69';
 
-<body>
-  <div id="root"></div>
-  <script type="module" src="/src/bootstrap.js"></script>
-  
-</body>
+          var url = new URL(window.location.href);
+          var p = url.searchParams;
+          var changed = false;
 
+          // Host synonyms: some code looks for host, some for coupaHost/tenant
+          var hostKeys = ['host', 'coupaHost', 'tenant'];
+          var hasHost = hostKeys.some(function (k) { return p.get(k); });
+          if (!hasHost) {
+            hostKeys.forEach(function (k) { p.set(k, DEFAULT_HOST); });
+            changed = true;
+          }
+
+          // ID synonyms: iframeId, clientId, iframe_id, id
+          var idKeys = ['iframeId', 'clientId', 'iframe_id', 'id'];
+          var hasId = idKeys.some(function (k) { return p.get(k); });
+          if (!hasId) {
+            idKeys.forEach(function (k) { p.set(k, DEFAULT_ID); });
+            changed = true;
+          }
+
+          if (changed) {
+            history.replaceState(null, '', url.toString());
+          }
+        } catch (e) {
+          // Do not block rendering if something odd happens
+          console.warn('[inline-bootstrap] failed to normalize URL params:', e);
+        }
+      })();
+    </script>
+    <!-- END inline bootstrap -->
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <!-- Load your real app entry AFTER params are guaranteed -->
+    <script type="module" src="/src/main-entry.js"></script>
+  </body>
 </html>
