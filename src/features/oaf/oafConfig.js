@@ -1,57 +1,116 @@
+// src/features/oaf/oafConfig.js
 import { CONFIG_PROPS } from "./oafConstants";
 
-// URL params would be used when initializing the OAF instance
-let urlParams = new URLSearchParams(document.location.search);
+/**
+ * Helpers
+ */
+const qs = new URLSearchParams(window.location.search);
+
+// First non-empty value among a list of query keys
+function firstFromQuery(...keys) {
+  for (const k of keys) {
+    const v = qs.get(k);
+    if (v && String(v).trim().length > 0) return v.trim();
+  }
+  return null;
+}
+
+// Ensure host string includes scheme
+function normalizeHost(host, httpsPrefix) {
+  if (!host) return null;
+  const h = host.trim();
+  if (/^https?:\/\//i.test(h)) return h;               // already absolute
+  return `${httpsPrefix}${h.replace(/^\/+/, "")}`;      // prefix protocol
+}
 
 /**
- * Determines the Coupa host URL based on environment and URL parameters.
- * @returns {string} The Coupa host URL.
+ * 1) Resolve Coupa host
+ *    - Dev: use localhost from constants
+ *    - Prod: prefer query params (coupaHost/host/tenant), else DEFAULT_HOST
  */
 const getCoupaHost = () => {
   if (!import.meta.env.PROD) {
-    return CONFIG_PROPS.HOST_URLS.LOCALHOST;
+    return CONFIG_PROPS.HOST_URLS.LOCALHOST; // e.g., http://localhost:3000
   }
-  const host = urlParams.get(CONFIG_PROPS.URL_PARAMS.COUPA_HOST);
-  if (!host) {
-    console.warn("No Coupa host found in URL parameters, using default host");
+
+  // Accept multiple synonyms for host
+  const rawFromQuery = firstFromQuery(
+    CONFIG_PROPS?.URL_PARAMS?.COUPA_HOST ?? "coupaHost",
+    "host",
+    "tenant"
+  );
+
+  const httpsPrefix =
+    (CONFIG_PROPS?.HOST_URLS?.HTTPS_PROTOCOL ?? "https://").trim();
+
+  const defaultHost =
+    CONFIG_PROPS?.HOST_URLS?.DEFAULT_HOST ?? "https://ey-in-demo.coupacloud.com";
+
+  const resolved = normalizeHost(rawFromQuery, httpsPrefix);
+
+  if (!resolved) {
+    console.warn(
+      "[OAF] No Coupa host found in URL parameters; using default host:",
+      defaultHost
+    );
   }
-  return host
-    ? `${CONFIG_PROPS.HOST_URLS.HTTPS_PROTOCOL}${host}`
-    : CONFIG_PROPS.HOST_URLS.DEFAULT_HOST;
+
+  return resolved || defaultHost;
 };
 
 /**
- * Validates the configuration object
- * @param {OafConfig} config - Configuration to validate
- * @throws {Error} If required properties are missing
+ * 2) Resolve iFrame ID
+ *    - Accept iframeId/clientId/iframe_id/id from URL
+ *    - If missing in PROD, warn and fall back to a safe default (69)
  */
-const validateConfig = (config) => {
-  if (!config.appId) {
-    throw new Error("App ID is required for OAF configuration");
+const getIframeId = () => {
+  // read from query using all known aliases
+  const fromQuery = firstFromQuery(
+    CONFIG_PROPS?.URL_PARAMS?.IFRAME_ID ?? "iframeId",
+    "clientId",
+    "iframe_id",
+    "id"
+  );
+
+  // Your agreed default for standalone use
+  const FALLBACK_IFRAME_ID = "69";
+
+  if (!fromQuery && import.meta.env.PROD) {
+    console.warn(
+      "[OAF] Iframe ID not found in URL parameters; using default:",
+      FALLBACK_IFRAME_ID
+    );
   }
-  if (!config.coupahost) {
-    throw new Error("Coupa host is required for OAF configuration");
-  }
-  if (!config.iframeId && import.meta.env.PROD) {
-    throw new Error("Iframe ID not found in URL parameters");
-  }
+
+  return fromQuery || FALLBACK_IFRAME_ID;
 };
 
 /**
- * Configuration object for the OAF (Open Assistant Framework) feature.
- *
- * @typedef {Object} OafConfig
- * @property {string} appId - The unique application identifier for OAF registration
- * @property {string} coupahost - The Coupa host URL, automatically determined based on environment and URL parameters
- * @property {string|null} iframeId - The ID of the floating iframe element, extracted from URL parameters (may be null)
+ * 3) Build config
+ *    coupahost and iframeId will always be present after the above steps.
  */
 const config = {
   appId: CONFIG_PROPS.APP_ID,
   coupahost: getCoupaHost(),
-  iframeId: urlParams.get(CONFIG_PROPS.URL_PARAMS.IFRAME_ID),
+  iframeId: getIframeId(),
+  // Some codepaths might expect clientId as an alias
+  clientId: getIframeId(),
 };
 
-// Validate configuration before exporting
+/**
+ * 4) Validate (keep appId required; do not hard-throw for host/iframeId)
+ */
+const validateConfig = (cfg) => {
+  if (!cfg.appId) {
+    throw new Error("App ID is required for OAF configuration");
+  }
+  // Host / iframeId now guaranteed by getters (or safely defaulted).
+  // If you still want hard enforcement for certain environments, add it here.
+};
+
+// Validate before export
 validateConfig(config);
 
 export default config;
+// Optional named export for convenience if other files expect it:
+export const OAF_CONFIG = config;
